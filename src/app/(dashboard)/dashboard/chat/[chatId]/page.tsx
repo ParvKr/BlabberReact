@@ -29,10 +29,9 @@ export async function generateMetadata({
 }
 
 interface PageProps {
-  params: {
-    chatId: string
-  }
+  params: { chatId: string } | Promise<{ chatId: string }>;
 }
+
 
 async function getChatMessages(chatId: string) {
   try {
@@ -56,7 +55,9 @@ async function getChatMessages(chatId: string) {
 }
 
 const page = async ({ params }: PageProps) => {
-  const { chatId } = params
+  const resolvedParams = await params;
+  const { chatId } = resolvedParams;
+
   const session = await getServerSession(authOptions)
   if (!session) notFound()
 
