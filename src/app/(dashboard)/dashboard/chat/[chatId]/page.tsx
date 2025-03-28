@@ -7,34 +7,36 @@ import { getServerSession } from 'next-auth'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
-// The following generateMetadata functiion was written after the video and is purely optional
-export async function generateMetadata({
-  params,
-}: {
-  params: { chatId: string }
-}) {
+// Ensure these types are properly defined
+type User = {
+  id: string
+  name: string
+  email: string
+  image: string
+}
+
+type Message = {
+  id: string
+  senderId: string
+  text: string
+  timestamp: number
+}
+
+export async function generateMetadata({ params }: { params: { chatId: string } }) {
   const session = await getServerSession(authOptions)
   if (!session) notFound()
+  
   const [userId1, userId2] = params.chatId.split('--')
   const { user } = session
 
   const chatPartnerId = user.id === userId1 ? userId2 : userId1
-  const chatPartnerRaw = (await fetchRedis(
-    'get',
-    `user:${chatPartnerId}`
-  )) as string
+  const chatPartnerRaw = await fetchRedis('get', `user:${chatPartnerId}`) as string
   const chatPartner = JSON.parse(chatPartnerRaw) as User
 
   return { title: `FriendZone | ${chatPartner.name} chat` }
 }
 
-interface PageProps {
-  params: {
-    chatId: string
-  }
-}
-
-async function getChatMessages(chatId: string) {
+async function getChatMessages(chatId: string): Promise<Message[]> {
   try {
     const results: string[] = await fetchRedis(
       'zrange',
@@ -43,25 +45,26 @@ async function getChatMessages(chatId: string) {
       -1
     )
 
-    const dbMessages = results.map((message) => JSON.parse(message) as Message)
-
+    const dbMessages = results.map(message => JSON.parse(message) as Message)
     const reversedDbMessages = dbMessages.reverse()
-
-    const messages = messageArrayValidator.parse(reversedDbMessages)
-
-    return messages
+    
+    return messageArrayValidator.parse(reversedDbMessages)
   } catch (error) {
     notFound()
   }
 }
 
-const page = async ({ params }: { params: { chatId: string } }) => {
-  const { chatId } = params;
+// The critical fix is here - simplify the PageProps
+type PageParams = {
+  chatId: string
+}
+
+export default async function Page({ params }: { params: PageParams }) {
+  const { chatId } = params
   const session = await getServerSession(authOptions)
   if (!session) notFound()
 
   const { user } = session
-
   const [userId1, userId2] = chatId.split('--')
 
   if (user.id !== userId1 && user.id !== userId2) {
@@ -69,12 +72,7 @@ const page = async ({ params }: { params: { chatId: string } }) => {
   }
 
   const chatPartnerId = user.id === userId1 ? userId2 : userId1
-  // new
-
-  const chatPartnerRaw = (await fetchRedis(
-    'get',
-    `user:${chatPartnerId}`
-  )) as string
+  const chatPartnerRaw = await fetchRedis('get', `user:${chatPartnerId}`) as string
   const chatPartner = JSON.parse(chatPartnerRaw) as User
   const initialMessages = await getChatMessages(chatId)
 
@@ -100,7 +98,6 @@ const page = async ({ params }: { params: { chatId: string } }) => {
                 {chatPartner.name}
               </span>
             </div>
-
             <span className='text-sm text-gray-600'>{chatPartner.email}</span>
           </div>
         </div>
@@ -117,5 +114,3 @@ const page = async ({ params }: { params: { chatId: string } }) => {
     </div>
   )
 }
-
-export default page
