@@ -22,11 +22,11 @@ type Message = {
   timestamp: number
 }
 
-export async function generateMetadata({ params }: { params: { chatId: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ chatId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session) notFound()
-  
-  const [userId1, userId2] = params.chatId.split('--')
+  const { chatId } = await params;
+  const [userId1, userId2] = chatId.split('--')
   const { user } = session
 
   const chatPartnerId = user.id === userId1 ? userId2 : userId1
@@ -59,8 +59,8 @@ type PageParams = {
   chatId: string
 }
 
-export default async function Page({ params }: { params: PageParams }) {
-  const { chatId } = params
+export default async function Page({ params }: { params: Promise<PageParams> }) {
+  const { chatId } = await params
   const session = await getServerSession(authOptions)
   if (!session) notFound()
 
