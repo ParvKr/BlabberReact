@@ -19,6 +19,8 @@ function getGoogleCredentials() {
   return { clientId, clientSecret }
 }
 
+const { clientId, clientSecret } = getGoogleCredentials()
+
 export const authOptions: NextAuthOptions = {
   adapter: UpstashRedisAdapter(db),
   session: {
@@ -30,8 +32,8 @@ export const authOptions: NextAuthOptions = {
   },
   providers: [
     GoogleProvider({
-      clientId: getGoogleCredentials().clientId,
-      clientSecret: getGoogleCredentials().clientSecret,
+      clientId,
+      clientSecret,
     }),
   ],
   callbacks: {

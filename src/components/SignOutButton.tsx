@@ -6,7 +6,7 @@ import { ButtonHTMLAttributes, FC, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import Button from './ui/Button'
 
-interface SignOutButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {}
+type SignOutButtonProps = ButtonHTMLAttributes<HTMLButtonElement>
 
 const SignOutButton: FC<SignOutButtonProps> = ({ ...props }) => {
   const [isSigningOut, setIsSigningOut] = useState<boolean>(false)
@@ -18,7 +18,7 @@ const SignOutButton: FC<SignOutButtonProps> = ({ ...props }) => {
         setIsSigningOut(true)
         try {
           await signOut()
-        } catch (error) {
+        } catch {
           toast.error('There was a problem signing out')
         } finally {
           setIsSigningOut(false)

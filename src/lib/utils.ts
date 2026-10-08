@@ -5,8 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Builds the name of a *private* Pusher channel. Private channels require the
+ * subscriber to be authorised by `/api/pusher/auth`, which checks that the
+ * signed-in user is actually allowed to listen to the channel.
+ */
 export function toPusherKey(key: string) {
-  return key.replace(/:/g, '__')
+  return `private-${key.replace(/:/g, '__')}`
 }
 
 export function chatHrefConstructor(id1: string, id2: string) {

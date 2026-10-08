@@ -1,10 +1,10 @@
 import Providers from '@/components/Providers'
+import { GeistSans } from 'geist/font/sans'
 import './globals.css'
 
-// Done after the video and optional: add page metadata
 export const metadata = {
-  title: 'Blabber | Home',
-  description: 'Welcome to the Blabber',
+  title: 'Blabber',
+  description: 'Focused, real-time chat for professionals.',
 }
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en'>
-      <body>
+      <body className={GeistSans.className}>
         <Providers>{children}</Providers>
       </body>
     </html>

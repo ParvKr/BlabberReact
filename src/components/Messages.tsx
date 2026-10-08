@@ -1,13 +1,11 @@
 'use client'
 
-import { pusherClient } from '@/lib/pusher'
+import { pusherClient } from '@/lib/pusher-client'
 import { cn, toPusherKey } from '@/lib/utils'
 import { Message } from '@/lib/validations/message'
 import { format } from 'date-fns'
 import Image from 'next/image'
-import { FC, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Phone } from 'lucide-react' // Call icon
+import { FC, useEffect, useState } from 'react'
 
 interface MessagesProps {
   initialMessages: Message[]
@@ -25,13 +23,14 @@ const Messages: FC<MessagesProps> = ({
   sessionImg,
 }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
-  const router = useRouter(); // For navigation
 
   useEffect(() => {
     pusherClient.subscribe(toPusherKey(`chat:${chatId}`))
 
     const messageHandler = (message: Message) => {
-      setMessages((prev) => [message, ...prev])
+      setMessages((prev) =>
+        prev.some((m) => m.id === message.id) ? prev : [message, ...prev]
+      )
     }
 
     pusherClient.bind('incoming-message', messageHandler)
@@ -42,45 +41,15 @@ const Messages: FC<MessagesProps> = ({
     }
   }, [chatId])
 
-  const scrollDownRef = useRef<HTMLDivElement | null>(null)
-
   const formatTimestamp = (timestamp: number) => {
     return format(timestamp, 'HH:mm')
   }
 
-  // Function to initiate a call
-  const handleCall = () => {
-    router.push(`/call/${chatPartner.id}`) // Navigate to call page with user ID
-  }
-
   return (
     <div className="flex flex-col h-full">
-      {/* Chat Header with Call Button */}
-      <div className="flex justify-between items-center p-4 bg-gray-100 border-b">
-        <div className="flex items-center gap-2">
-          <Image
-            src={chatPartner.image}
-            width={40}
-            height={40}
-            alt="User"
-            className="rounded-full"
-          />
-          <h2 className="text-lg font-semibold">{chatPartner.name}</h2>
-        </div>
-        <button 
-          onClick={handleCall} 
-          className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600"
-        >
-          <Phone size={20} />
-        </button>
-      </div>
-
-      {/* Chat Messages */}
       <div
         id='messages'
         className='flex-1 flex flex-col-reverse gap-4 p-3 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch'>
-        <div ref={scrollDownRef} />
-
         {messages.map((message, index) => {
           const isCurrentUser = message.senderId === sessionId
           const hasNextMessageFromSameUser =
@@ -112,13 +81,15 @@ const Messages: FC<MessagesProps> = ({
                     'order-1': !isCurrentUser,
                     invisible: hasNextMessageFromSameUser,
                   })}>
-                  <Image
-                    fill
-                    src={isCurrentUser ? (sessionImg as string) : chatPartner.image}
-                    alt='Profile picture'
-                    referrerPolicy='no-referrer'
-                    className='rounded-full'
-                  />
+                  {(isCurrentUser ? sessionImg : chatPartner.image) ? (
+                    <Image
+                      fill
+                      src={(isCurrentUser ? sessionImg : chatPartner.image) as string}
+                      alt='Profile picture'
+                      referrerPolicy='no-referrer'
+                      className='rounded-full'
+                    />
+                  ) : null}
                 </div>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { Icon, Icons } from '@/components/Icons'
+import { Icons } from '@/components/Icons'
 import SignOutButton from '@/components/SignOutButton'
 import { VoiceComponent } from '@/components/ui/VoiceComponent'
 import { authOptions } from '@/lib/auth'
@@ -6,7 +6,7 @@ import { getServerSession } from 'next-auth'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FC, ReactNode } from 'react'
+import { ReactNode } from 'react'
 import FriendRequestSidebarOptions from '@/components/FriendRequestSidebarOptions'
 import { fetchRedis } from '@/helpers/redis'
 import { getFriendsByUserId } from '@/helpers/get-friends-by-user-id'
@@ -18,7 +18,6 @@ interface LayoutProps {
   children: ReactNode
 }
 
-// Done after the video and optional: add page metadata
 export const metadata = {
   title: 'Blabber | Dashboard',
   description: 'Your dashboard',
@@ -38,13 +37,12 @@ const Layout = async ({ children }: LayoutProps) => {
   if (!session) notFound()
 
   const friends = await getFriendsByUserId(session.user.id)
-  console.log('friends', friends)
 
   const unseenRequestCount = (
     (await fetchRedis(
       'smembers',
       `user:${session.user.id}:incoming_friend_requests`
-    )) as User[]
+    )) as string[]
   ).length
 
   return (
@@ -105,21 +103,25 @@ const Layout = async ({ children }: LayoutProps) => {
                 </li>
               </ul>
             </li>
-            <div>
-              <VoiceComponent />
-            </div>
+            {process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID ? (
+              <li>
+                <VoiceComponent />
+              </li>
+            ) : null}
             <li className='-mx-6 mt-auto flex items-center'>
               <div className='flex flex-1 items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-gray-900'>
                 <div className='relative h-8 w-8 bg-gray-50'>
-                  <Image
-                    fill
-                    referrerPolicy='no-referrer'
-                    className='rounded-full'
-                    src={session.user.image || ''}
-                    alt='Your profile picture'
-                  />
+                  {session.user.image ? (
+                    <Image
+                      fill
+                      referrerPolicy='no-referrer'
+                      className='rounded-full'
+                      src={session.user.image}
+                      alt='Your profile picture'
+                    />
+                  ) : null}
                 </div>
-                
+
                 <span className='sr-only'>Your profile</span>
                 <div className='flex flex-col'>
                   <span aria-hidden='true'>{session.user.name}</span>

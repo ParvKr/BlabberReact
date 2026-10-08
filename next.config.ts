@@ -1,11 +1,11 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    domains: ['lh3.googleusercontent.com']
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  }
-};
+import type { NextConfig } from 'next'
 
-export default nextConfig;  
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+    ],
+  },
+}
+
+export default nextConfig

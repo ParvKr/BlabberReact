@@ -5,6 +5,7 @@ import { FC, useRef, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import TextareaAutosize from 'react-textarea-autosize'
 import Button from './ui/Button'
+import { MAX_MESSAGE_LENGTH } from '@/lib/validations/message'
 
 interface ChatInputProps {
   chatPartner: User
@@ -17,11 +18,12 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
   const [input, setInput] = useState<string>('')
 
   const sendMessage = async () => {
-    if(!input) return
+    const text = input.trim()
+    if (!text || isLoading) return
     setIsLoading(true)
 
     try {
-      await axios.post('/api/message/send', { text: input, chatId })
+      await axios.post('/api/message/send', { text, chatId })
       setInput('')
       textareaRef.current?.focus()
     } catch {
@@ -43,6 +45,7 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
             }
           }}
           rows={1}
+          maxLength={MAX_MESSAGE_LENGTH}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={`Message ${chatPartner.name}`}
@@ -59,7 +62,7 @@ const ChatInput: FC<ChatInputProps> = ({ chatPartner, chatId }) => {
         </div>
 
         <div className='absolute right-0 bottom-0 flex justify-between py-2 pl-3 pr-2'>
-          <div className='flex-shrin-0'>
+          <div className='shrink-0'>
             <Button isLoading={isLoading} onClick={sendMessage} type='submit'>
               Post
             </Button>
