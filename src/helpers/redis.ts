@@ -1,18 +1,20 @@
-const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL
-const authToken = process.env.UPSTASH_REDIS_REST_TOKEN
-
 type Command = 'zrange' | 'sismember' | 'get' | 'smembers'
 
 export async function fetchRedis(
   command: Command,
   ...args: (string | number)[]
 ) {
-  const commandUrl = `${upstashRedisRestUrl}/${command}/${args.join('/')}`
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+
+  // Arguments are user-influenced (emails, ids), so encode every path segment
+  // to stop a "/" from smuggling extra arguments into the Redis command.
+  const commandUrl = `${url}/${command}/${args
+    .map((arg) => encodeURIComponent(String(arg)))
+    .join('/')}`
 
   const response = await fetch(commandUrl, {
-    headers: {
-      Authorization: `Bearer ${authToken}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
     cache: 'no-store',
   })
 

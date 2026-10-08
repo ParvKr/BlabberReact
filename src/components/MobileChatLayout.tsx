@@ -4,7 +4,7 @@ import { Transition, Dialog } from '@headlessui/react'
 import { Menu, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { FC, Fragment, useEffect, useState } from 'react'
+import { FC, Fragment, useState } from 'react'
 import { Icons } from './Icons'
 import SignOutButton from './SignOutButton'
 import Button, { buttonVariants } from './ui/Button'
@@ -22,13 +22,12 @@ import { usePathname } from 'next/navigation'
 }
 
 const MobileChatLayout: FC<MobileChatLayoutProps> = ({ friends, session, sidebarOptions, unseenRequestCount }) => {
-  const [open, setOpen] = useState<boolean>(false)
+  // remember the page the menu was opened on, so navigating closes it
+  const [openedOn, setOpenedOn] = useState<string | null>(null)
 
   const pathname = usePathname()
-
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
+  const open = openedOn === pathname
+  const setOpen = (value: boolean) => setOpenedOn(value ? pathname : null)
 
   return (
     <div className='fixed bg-zinc-50 border-b border-zinc-200 top-0 inset-x-0 py-2 px-4'>
@@ -132,13 +131,15 @@ const MobileChatLayout: FC<MobileChatLayoutProps> = ({ friends, session, sidebar
                             <li className='-ml-6 mt-auto flex items-center'>
                               <div className='flex flex-1 items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-gray-900'>
                                 <div className='relative h-8 w-8 bg-gray-50'>
-                                  <Image
-                                    fill
-                                    referrerPolicy='no-referrer'
-                                    className='rounded-full'
-                                    src={session.user.image || ''}
-                                    alt='Your profile picture'
-                                  />
+                                  {session.user.image ? (
+                                    <Image
+                                      fill
+                                      referrerPolicy='no-referrer'
+                                      className='rounded-full'
+                                      src={session.user.image}
+                                      alt='Your profile picture'
+                                    />
+                                  ) : null}
                                 </div>
 
                                 <span className='sr-only'>Your profile</span>

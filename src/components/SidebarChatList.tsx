@@ -1,8 +1,8 @@
 'use client'
 
-import { pusherClient } from '@/lib/pusher'
+import { pusherClient } from '@/lib/pusher-client'
 import { chatHrefConstructor, toPusherKey } from '@/lib/utils'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import UnseenChatToast from './UnseenChatToast'
@@ -18,7 +18,6 @@ interface ExtendedMessage extends Message {
 }
 
 const SidebarChatList: FC<SidebarChatListProps> = ({ friends, sessionId }) => {
-  const router = useRouter()
   const pathname = usePathname()
   const [unseenMessages, setUnseenMessages] = useState<Message[]>([])
   const [activeChats, setActiveChats] = useState<User[]>(friends)
@@ -28,8 +27,11 @@ const SidebarChatList: FC<SidebarChatListProps> = ({ friends, sessionId }) => {
     pusherClient.subscribe(toPusherKey(`user:${sessionId}:friends`))
 
     const newFriendHandler = (newFriend: User) => {
-      console.log("received new user", newFriend)
-      setActiveChats((prev) => [...prev, newFriend])
+      setActiveChats((prev) =>
+        prev.some((friend) => friend.id === newFriend.id)
+          ? prev
+          : [...prev, newFriend]
+      )
     }
 
     const chatHandler = (message: ExtendedMessage) => {
@@ -64,19 +66,22 @@ const SidebarChatList: FC<SidebarChatListProps> = ({ friends, sessionId }) => {
       pusherClient.unbind('new_message', chatHandler)
       pusherClient.unbind('new_friend', newFriendHandler)
     }
-  }, [pathname, sessionId, router])
+  }, [pathname, sessionId])
 
-  useEffect(() => {
+  // clear a friend's unseen messages once their chat is opened
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname)
     if (pathname?.includes('chat')) {
-      setUnseenMessages((prev) => {
-        return prev.filter((msg) => !pathname.includes(msg.senderId))
-      })
+      setUnseenMessages((prev) =>
+        prev.filter((msg) => !pathname.includes(msg.senderId))
+      )
     }
-  }, [pathname])
+  }
 
   return (
     <ul role='list' className='max-h-[25rem] overflow-y-auto -mx-2 space-y-1'>
-      {activeChats.sort().map((friend) => {
+      {activeChats.map((friend) => {
         const unseenMessagesCount = unseenMessages.filter((unseenMsg) => {
           return unseenMsg.senderId === friend.id
         }).length

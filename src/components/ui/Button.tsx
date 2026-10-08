@@ -10,6 +10,8 @@ export const buttonVariants = cva(
       variant: {
         default: 'bg-slate-900 text-white hover:bg-slate-800',
         ghost: 'bg-transparent hover:text-slate-900 hover:bg-slate-200',
+        outline:
+          'bg-white text-gray-900 border border-gray-300 shadow-xs hover:bg-gray-50',
       },
       size: {
         default: 'h-10 py-2 px-4',
@@ -50,19 +52,3 @@ const Button: FC<ButtonProps> = ({
 }
 
 export default Button
-
-
-
-
-
-
-interface PersonInterface {
-  age: number
-  name: string
-  job?: boolean
-}
-
-const Person: PersonInterface = {
-  age: 14,
-  name: 'John'
-}

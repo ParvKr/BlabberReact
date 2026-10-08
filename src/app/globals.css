@@ -1,5 +1,43 @@
 @import "tailwindcss";
 
+@theme {
+  --animate-fade-up: fade-up 0.6s ease-out both;
+  --animate-typing: typing 1.2s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes typing {
+    0%,
+    60%,
+    100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* The UI is designed for light mode only; don't inherit a dark system canvas. */
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: #fff;
+}
+
 @layer base {
   container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
@@ -25,4 +63,26 @@
 
 .scrollbar-thumb-rounded::-webkit-scrollbar-thumb {
   border-radius: 0.25rem;
+}
+/* Landing page: fade sections in as they scroll into view (CSS only, and a
+   no-op where scroll-driven animations or motion are unavailable). */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
 }
